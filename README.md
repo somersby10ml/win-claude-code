@@ -4,6 +4,9 @@
 
 Claude Code meets Windows. No more "WSL required" errors, just pure productivity.
 
+![a.png](./images/a.png)
+
+
 ## 🚀 Quick Start
 
 **Step 1:** Install Claude Code globally with the magic flag
