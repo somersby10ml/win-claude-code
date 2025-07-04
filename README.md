@@ -13,7 +13,7 @@ npm install -g @anthropic-ai/claude-code --ignore-scripts
 
 **Step 2:** Run it anywhere, anytime
 ```bash
-npx win-claude-code
+npx win-claude-code@latest
 ```
 
 **That's it.** 🎉
