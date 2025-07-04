@@ -1,10 +1,10 @@
 {
   "name": "win-claude-code",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "runner.js",
   "type": "module",
   "bin": {
-    "win-claude": "./runner.js"
+    "win-claude": "node ./runner.js"
   },
   "scripts": {
     "start": "node runner.js"
