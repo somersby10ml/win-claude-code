@@ -1,0 +1,32 @@
+{
+  "name": "win-claude-code",
+  "version": "1.0.0",
+  "main": "runner.js",
+  "type": "module",
+  "bin": {
+    "win-claude": "./runner.js"
+  },
+  "scripts": {
+    "start": "node runner.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/somersby10ml/win-claude-code.git"
+  },
+  "bugs": {
+    "url": "https://github.com/somersby10ml/win-claude-code/issues"
+  },
+  "homepage": "https://github.com/somersby10ml/win-claude-code#readme",
+  "keywords": [
+    "claude",
+    "anthropic",
+    "windows",
+    "cli",
+    "ai",
+    "terminal",
+    "wrapper"
+  ],
+  "author": "somersby10ml",
+  "description": "A utility to run claude-code in a Windows environment.",
+  "license": "MIT"
+}
