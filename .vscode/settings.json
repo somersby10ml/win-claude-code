@@ -1,9 +1,4 @@
 {
   "editor.formatOnSave": true,
-  "editor.tabSize": 2,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.addMissingImports": "always",
-    // "source.organizeImports": "always",
-  },
+  "editor.tabSize": 2
 }
