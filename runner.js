@@ -4,33 +4,66 @@ import path from 'path';
 import fs from 'fs';
 import { syncBuiltinESMExports } from 'module';
 
-(async () => {
+const originalConsole = {
+  error: console.error.bind(console),
+  warn: console.warn.bind(console),
+  log: console.log.bind(console)
+};
 
-  const originalConsoleLog = console.log;
-  const originalConsoleError = console.error;
+(async () => {
 
   async function main() {
     const npmGlobalRoot = await getNpmGlobalRoot();
     const claudePath = path.join(npmGlobalRoot, '@anthropic-ai', 'claude-code');
     const packageInstalled = fs.existsSync(path.join(claudePath, 'package.json'));
     if (!packageInstalled) {
-      originalConsoleError('Claude Code package is not installed globally. Please run "npm install -g @anthropic-ai/claude-code --ignore-scripts"');
+      originalConsole.error('Claude Code package is not installed globally. Please run "npm install -g @anthropic-ai/claude-code --ignore-scripts"');
       return;
     }
 
     const cliPath = path.join(claudePath, 'cli.js');
     if (!fs.existsSync(cliPath)) {
-      originalConsoleError('CLI script is not found. Please ensure it is installed correctly.');
+      originalConsole.error('CLI script is not found. Please ensure it is installed correctly.');
       return;
     }
 
     hook();
     await import(`file://${cliPath}`).catch(err => {
-      originalConsoleError('[win-cursor] Error importing CLI script:', err);
+      originalConsole.error('[win-cursor] Error importing CLI script:', err);
     });
   }
 
   const hook = () => {
+
+    // Automatically add Git Bash path
+    const setupGitBashPath = () => {
+      const possibleGitPaths = [
+        'C:\\Program Files\\Git\\usr\\bin',
+        'C:\\Program Files (x86)\\Git\\usr\\bin',
+        process.env.ProgramFiles + '\\Git\\usr\\bin',
+        process.env['ProgramFiles(x86)'] + '\\Git\\usr\\bin'
+      ];
+
+      let gitBashFound = false;
+
+      for (const gitPath of possibleGitPaths) {
+        if (fs.existsSync(gitPath)) {
+          if (!process.env.PATH.includes(gitPath)) {
+            process.env.PATH = `${gitPath};${process.env.PATH}`;
+          }
+          gitBashFound = true;
+          break;
+        }
+      }
+
+      if (!gitBashFound) {
+        originalConsole.warn('[win-claude-code] Git Bash not found - Unix commands (grep, find, awk, sed) will not be available');
+        originalConsole.warn('[win-claude-code] To enable Unix commands, install Git for Windows: https://git-scm.com/download/win');
+        originalConsole.warn('[win-claude-code] After installation, restart your terminal and run win-claude-code again');
+      }
+    };
+
+    setupGitBashPath();
 
     const originalAccessSync = fs.accessSync;
     fs.accessSync = function (...args) {
@@ -52,7 +85,7 @@ import { syncBuiltinESMExports } from 'module';
     //     };
     //   }
     // } catch (e) {
-    //   originalConsoleError('[win-cursor] Could not patch Node.js fs module');
+    //   originalConsole.error('[win-cursor] Could not patch Node.js fs module');
     // }
 
     // try {
@@ -64,13 +97,13 @@ import { syncBuiltinESMExports } from 'module';
     //     configurable: true
     //   });
     // } catch (e) {
-    //   originalConsoleError('[win-cursor] Could not override fs.accessSync with defineProperty');
+    //   originalConsole.error('[win-cursor] Could not override fs.accessSync with defineProperty');
     // }
 
     try {
       syncBuiltinESMExports();
     } catch (e) {
-      console.log('Could not sync builtin ESM exports', e);
+      // Silently ignore sync errors - not critical for operation
     }
 
   }
@@ -105,7 +138,7 @@ import { syncBuiltinESMExports } from 'module';
   }
 
   main().catch(err => {
-    console.error('Error in main function:', err);
+    originalConsole.error('Error in main function:', err);
   });
 
 })();
