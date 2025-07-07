@@ -1,17 +1,17 @@
 #!/usr/bin/env node
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import { syncBuiltinESMExports } from 'module';
-
-const originalConsole = {
-  error: console.error.bind(console),
-  warn: console.warn.bind(console),
-  log: console.log.bind(console)
-};
+import { syncBuiltinESMExports, createRequire } from 'module';
 
 (async () => {
 
+  const originalConsole = {
+    error: console.error.bind(console),
+    warn: console.warn.bind(console),
+    log: console.log.bind(console)
+  };
+  
   async function main() {
     const npmGlobalRoot = await getNpmGlobalRoot();
     const claudePath = path.join(npmGlobalRoot, '@anthropic-ai', 'claude-code');
@@ -72,6 +72,143 @@ const originalConsole = {
       }
       return originalAccessSync.apply(this, args);
     };
+
+    // Function to find Git Bash path
+    const findGitBashPath = () => {
+      const possibleBashPaths = [
+        'C:\\Program Files\\Git\\bin\\bash.exe',
+        'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
+        process.env.ProgramFiles + '\\Git\\bin\\bash.exe',
+        process.env['ProgramFiles(x86)'] + '\\Git\\bin\\bash.exe',
+        'C:\\Program Files\\Git\\usr\\bin\\bash.exe',
+        'C:\\Program Files (x86)\\Git\\usr\\bin\\bash.exe',
+        process.env.ProgramFiles + '\\Git\\usr\\bin\\bash.exe',
+        process.env['ProgramFiles(x86)'] + '\\Git\\usr\\bin\\bash.exe'
+      ];
+
+      for (const bashPath of possibleBashPaths) {
+        if (fs.existsSync(bashPath)) {
+          return bashPath;
+        }
+      }
+      return null;
+    };
+
+    // Hook spawn function to log parameters and convert Linux paths to Windows
+    const originalSpawn = spawn;
+    const gitBashPath = findGitBashPath();
+    
+    // Function to convert Windows paths to Git Bash compatible paths
+    const convertWindowsPathToBash = (path) => {
+      // C:\Users\... → /c/Users/...
+      // D:\folder\... → /d/folder/...
+      return path.replace(/^([A-Za-z]):\\/, '/$1/')
+                 .replace(/\\/g, '/');
+    };
+
+    // Function to find and convert Windows paths in args array
+    const convertArgsForBash = (args) => {
+      if (!Array.isArray(args)) return args;
+      
+      return args.map(arg => {
+        if (typeof arg !== 'string') return arg;
+        
+        // Detect Windows absolute path patterns (C:\, D:\, etc.)
+        const windowsPathRegex = /([A-Za-z]):\\[\w\\\/\-\.]+/g;
+        
+        return arg.replace(windowsPathRegex, (match) => {
+          const converted = convertWindowsPathToBash(match);
+          originalConsole.log('  → path converted:', match, '→', converted);
+          return converted;
+        });
+      });
+    };
+
+    const spawnHook = function(command, args = [], options = {}) {
+      let modifiedCommand = command;
+      let modifiedArgs = args;
+      let wasModified = false;
+
+      // Log parameters (original)
+      originalConsole.log('[win-claude-code] spawn called:');
+      originalConsole.log('  original command:', command);
+      originalConsole.log('  original args:', Array.isArray(args) ? args : []);
+      
+      // Convert /bin/bash to Windows Git Bash path
+      if (command === '/bin/bash' && gitBashPath) {
+        modifiedCommand = gitBashPath;
+        wasModified = true;
+        originalConsole.log('  → converted /bin/bash to:', gitBashPath);
+        
+        // For bash commands, also convert Windows paths in args
+        modifiedArgs = convertArgsForBash(args);
+        if (JSON.stringify(modifiedArgs) !== JSON.stringify(args)) {
+          wasModified = true;
+        }
+      }
+      
+      // If bash is included in command and it's not a Windows path
+      if (command.includes('bash') && !command.includes('\\') && !command.includes('.exe') && gitBashPath) {
+        modifiedCommand = gitBashPath;
+        wasModified = true;
+        originalConsole.log('  → converted bash command to:', gitBashPath);
+        
+        // For bash commands, also convert Windows paths in args
+        modifiedArgs = convertArgsForBash(args);
+        if (JSON.stringify(modifiedArgs) !== JSON.stringify(args)) {
+          wasModified = true;
+        }
+      }
+
+      // Handle other Linux commands as well (if needed)
+      const linuxToWindowsCommands = {
+        '/bin/sh': gitBashPath,
+        'sh': gitBashPath,
+        '/usr/bin/bash': gitBashPath
+      };
+
+      if (linuxToWindowsCommands[command] && gitBashPath) {
+        modifiedCommand = linuxToWindowsCommands[command];
+        wasModified = true;
+        originalConsole.log('  → converted', command, 'to:', modifiedCommand);
+        
+        // For shell commands, also convert Windows paths in args
+        modifiedArgs = convertArgsForBash(args);
+        if (JSON.stringify(modifiedArgs) !== JSON.stringify(args)) {
+          wasModified = true;
+        }
+      }
+
+      if (wasModified) {
+        originalConsole.log('  modified command:', modifiedCommand);
+        originalConsole.log('  modified args:', modifiedArgs);
+      }
+      
+      originalConsole.log('  options:', typeof options === 'object' ? options : {});
+      
+      // Call original spawn function with modified command
+      return originalSpawn.call(this, modifiedCommand, modifiedArgs, options);
+    };
+
+    // Replace spawn function
+    try {
+      // Replace spawn in CommonJS modules (using createRequire)
+      const require = createRequire(import.meta.url);
+      const childProcess = require('child_process');
+      
+      if (childProcess && childProcess.spawn) {
+        childProcess.spawn = spawnHook;
+        originalConsole.log('[win-claude-code] Successfully hooked child_process.spawn');
+      }
+
+      // Also register spawn in global (so other code can use it)
+      if (typeof global !== 'undefined') {
+        global.spawn = spawnHook;
+      }
+      
+    } catch (e) {
+      originalConsole.warn('[win-claude-code] Could not hook spawn function:', e.message);
+    }
 
     // think about this...
     // process.env.SHELL = 'bash';
