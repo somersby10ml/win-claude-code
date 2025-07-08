@@ -55,7 +55,6 @@ const originalConsole = {
     os.tmpdir = function () {
       const windowsTmpPath = originalTmpdir.call(this);
       const unixTmpPath = windowsToPosix(windowsTmpPath);
-      originalConsole.log('[win-claude-code] os.tmpdir called:', windowsTmpPath, unixTmpPath);
       return unixTmpPath;
     };
 
@@ -94,7 +93,6 @@ const originalConsole = {
 
         if (childProcess && childProcess.spawn) {
           childProcess.spawn = spawnHook;
-          originalConsole.log('[win-claude-code] Successfully hooked child_process.spawn');
         }
 
         // Also register spawn in global (so other code can use it)
