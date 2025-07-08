@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
-import { syncBuiltinESMExports } from 'module';
+import { syncBuiltinESMExports, createRequire } from 'module';
+import os from 'os';
 
 const originalConsole = {
   error: console.error.bind(console),
@@ -12,6 +13,7 @@ const originalConsole = {
 
 (async () => {
 
+  let gitBashPath = null;
   async function main() {
     const npmGlobalRoot = await getNpmGlobalRoot();
     const claudePath = path.join(npmGlobalRoot, '@anthropic-ai', 'claude-code');
@@ -27,6 +29,13 @@ const originalConsole = {
       return;
     }
 
+    gitBashPath = findGitBashPath();
+    if (!gitBashPath) {
+      originalConsole.warn('[win-claude-code] Git Bash not found - Unix commands (grep, find, awk, sed) will not be available');
+      originalConsole.warn('[win-claude-code] To enable Unix commands, install Git for Windows: https://git-scm.com/download/win');
+      originalConsole.warn('[win-claude-code] After installation, restart your terminal and run win-claude-code again');
+    }
+
     hook();
     await import(`file://${cliPath}`).catch(err => {
       originalConsole.error('[win-cursor] Error importing CLI script:', err);
@@ -34,37 +43,6 @@ const originalConsole = {
   }
 
   const hook = () => {
-
-    // Automatically add Git Bash path
-    const setupGitBashPath = () => {
-      const possibleGitPaths = [
-        'C:\\Program Files\\Git\\usr\\bin',
-        'C:\\Program Files (x86)\\Git\\usr\\bin',
-        process.env.ProgramFiles + '\\Git\\usr\\bin',
-        process.env['ProgramFiles(x86)'] + '\\Git\\usr\\bin'
-      ];
-
-      let gitBashFound = false;
-
-      for (const gitPath of possibleGitPaths) {
-        if (fs.existsSync(gitPath)) {
-          if (!process.env.PATH.includes(gitPath)) {
-            process.env.PATH = `${gitPath};${process.env.PATH}`;
-          }
-          gitBashFound = true;
-          break;
-        }
-      }
-
-      if (!gitBashFound) {
-        originalConsole.warn('[win-claude-code] Git Bash not found - Unix commands (grep, find, awk, sed) will not be available');
-        originalConsole.warn('[win-claude-code] To enable Unix commands, install Git for Windows: https://git-scm.com/download/win');
-        originalConsole.warn('[win-claude-code] After installation, restart your terminal and run win-claude-code again');
-      }
-    };
-
-    setupGitBashPath();
-
     const originalAccessSync = fs.accessSync;
     fs.accessSync = function (...args) {
       if (args.length >= 2 && typeof args[0] === 'string' && args[0].includes('/bin/bash') && args[1] === 1) {
@@ -72,6 +50,64 @@ const originalConsole = {
       }
       return originalAccessSync.apply(this, args);
     };
+
+    const originalTmpdir = os.tmpdir;
+    os.tmpdir = function () {
+      const windowsTmpPath = originalTmpdir.call(this);
+      const unixTmpPath = windowsToPosix(windowsTmpPath);
+      originalConsole.log('[win-claude-code] os.tmpdir called:', windowsTmpPath, unixTmpPath);
+      return unixTmpPath;
+    };
+
+    const originalJoin = path.join;
+    path.join = function (...args) {
+      const result = originalJoin.apply(this, args);
+      return windowsToPosix(result);
+    };
+
+    const originalResolve = path.resolve;
+    path.resolve = function (...args) {
+      const result = originalResolve.apply(this, args);
+      return windowsToPosix(result);
+    };
+
+
+    if (gitBashPath) {
+      const originalSpawn = spawn;
+      const spawnHook = function (command, args = [], options = {}) {
+        try {
+          if (command === '/bin/bash') {
+            command = gitBashPath;
+          }
+
+          originalConsole.log('[win-claude-code] spawn called:', command, args, options);
+          return originalSpawn.call(this, command, args, options);
+        }
+        catch (error) {
+          originalConsole.error('[win-claude-code] spawn error:', error);
+          throw error;
+        }
+      };
+      // Replace spawn function
+      try {
+        // Replace spawn in CommonJS modules (using createRequire)
+        const require = createRequire(import.meta.url);
+        const childProcess = require('child_process');
+
+        if (childProcess && childProcess.spawn) {
+          childProcess.spawn = spawnHook;
+          originalConsole.log('[win-claude-code] Successfully hooked child_process.spawn');
+        }
+
+        // Also register spawn in global (so other code can use it)
+        if (typeof global !== 'undefined') {
+          global.spawn = spawnHook;
+        }
+
+      } catch (e) {
+        originalConsole.warn('[win-claude-code] Could not hook spawn function:', e.message);
+      }
+    }
 
     // think about this...
     // process.env.SHELL = 'bash';
@@ -108,6 +144,29 @@ const originalConsole = {
 
   }
 
+  // Automatically add Git Bash path
+  const findGitBashPath = () => {
+    const possibleGitPaths = [
+      `C:/Program Files/Git/usr/bin/bash.exe`,
+      `C:/Program Files (x86)/Git/usr/bin/bash.exe`,
+    ];
+
+    for (const gitPath of possibleGitPaths) {
+      if (fs.existsSync(gitPath)) {
+        return gitPath;
+      }
+    }
+
+    return false;
+  };
+
+  const windowsToPosix = (path) => {
+    return path
+      .replace(/\\/g, '/')           // \ → /
+      .replace(/^([A-Z]):/i, '/$1')  // C: → /c
+      .toLowerCase()                 // 소문자로
+      .replace(/^\/[a-z]/, match => match.toLowerCase());
+  }
 
 
   const getNpmGlobalRoot = () => {
