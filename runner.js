@@ -58,17 +58,56 @@ const originalConsole = {
       return unixTmpPath;
     };
 
-    const originalJoin = path.join;
-    path.join = function (...args) {
-      const result = originalJoin.apply(this, args);
-      return windowsToPosix(result);
-    };
+    // const originalLstat = fs.lstat;
+    // fs.lstat = function (path, options, callback) {
+    //   console.log('[lstat]', path);
+    //   if (typeof options === 'function') {
+    //     callback = options;
+    //     options = {};
+    //   }
+    //   const posixPath = windowsToPosix(path);
+    //   return originalLstat.call(this, posixPath, options, callback);
+    // };
 
-    const originalResolve = path.resolve;
-    path.resolve = function (...args) {
-      const result = originalResolve.apply(this, args);
-      return windowsToPosix(result);
-    };
+    // const originalLstatSync = fs.lstatSync;
+    // fs.lstatSync = function (path, options) {
+    //   console.log('[lstatSync]', path);
+    //   const posixPath = windowsToPosix(path);
+    //   return originalLstatSync.call(this, posixPath, options);
+    // };
+
+    // // realpath 후킹 - Windows 경로를 POSIX 경로로 변환 후 호출
+    // const originalRealpath = fs.realpath;
+    // fs.realpath = function (path, options, callback) {
+    //   console.log('[realpath]', path);
+    //   if (typeof options === 'function') {
+    //     callback = options;
+    //     options = {};
+    //   }
+    //   const posixPath = windowsToPosix(path);
+    //   return originalRealpath.call(this, posixPath, options, callback);
+    // };
+
+    // const originalRealpathSync = fs.realpathSync;
+    // fs.realpathSync = function (path, options) {
+    //   console.log('[realpathSync]', path);
+    //   const posixPath = windowsToPosix(path);
+    //   return originalRealpathSync.call(this, posixPath, options);
+    // };
+
+    // const originalJoin = path.join;
+    // path.join = function (...args) {
+    //   console.log(args);
+    //   const result = originalJoin.apply(this, args);
+    //   return windowsToPosix(result);
+    // };
+
+    // const originalResolve = path.resolve;
+    // path.resolve = function (...args) {
+    //   console.log(args);
+    //   const result = originalResolve.apply(this, args);
+    //   return windowsToPosix(result);
+    // };
 
 
     if (gitBashPath) {
