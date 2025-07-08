@@ -38,7 +38,7 @@ const originalConsole = {
 
     hook();
     await import(`file://${cliPath}`).catch(err => {
-      originalConsole.error('[win-cursor] Error importing CLI script:', err);
+      originalConsole.error('[win-claude-code] Error importing CLI script:', err);
     });
   }
 
@@ -79,8 +79,6 @@ const originalConsole = {
           if (command === '/bin/bash') {
             command = gitBashPath;
           }
-
-          originalConsole.log('[win-claude-code] spawn called:', command, args, options);
           return originalSpawn.call(this, command, args, options);
         }
         catch (error) {
