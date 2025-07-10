@@ -2,6 +2,10 @@
 
 > **No WSL. No Docker. Just Windows.**
 
+## 🌍 Languages / 언어 / 语言 / 言語 / Языки
+
+[English](README.md) | [한국어](docs/languages/README.ko.md) | [中文](docs/languages/README.zh.md) | [日本語](docs/languages/README.ja.md) | [Русский](docs/languages/README.ru.md) | [Español](docs/languages/README.es.md) | [Français](docs/languages/README.fr.md) | [Deutsch](docs/languages/README.de.md)
+
 [![npm version](https://img.shields.io/npm/v/win-claude-code.svg)](https://npmjs.com/package/win-claude-code)
 [![npm downloads](https://img.shields.io/npm/dm/win-claude-code.svg)](https://npmjs.com/package/win-claude-code)
 
