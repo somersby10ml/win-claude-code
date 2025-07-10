@@ -2,19 +2,24 @@
 
 > **No WSL. No Docker. Just Windows.**
 
+[![npm version](https://img.shields.io/npm/v/win-claude-code.svg)](https://npmjs.com/package/win-claude-code)
+[![npm canary](https://img.shields.io/npm/v/win-claude-code/canary.svg?label=npm%20canary)](https://npmjs.com/package/win-claude-code)
+[![npm downloads](https://img.shields.io/npm/dm/win-claude-code.svg)](https://npmjs.com/package/win-claude-code)
+
 Claude Code meets Windows. No more "WSL required" errors, just pure productivity.
 
 ![a.png](./images/a.png)
 
-
 ## 🚀 Quick Start
 
 **Step 1:** Install Claude Code globally with the magic flag
+
 ```bash
 npm install -g @anthropic-ai/claude-code --ignore-scripts
 ```
 
 **Step 2:** Run it anywhere, anytime
+
 ```bash
 npx win-claude-code@latest
 ```
@@ -39,7 +44,7 @@ npx win-claude-code@latest
 claude
 # Error: Please use WSL on Windows
 
-# With win-claude-code ✅  
+# With win-claude-code ✅
 npx win-claude-code
 # Claude Code is ready! 🤖
 ```
@@ -47,11 +52,13 @@ npx win-claude-code
 ## 🔧 Installation Options
 
 **One-time use** (Recommended)
+
 ```bash
 npx win-claude-code
 ```
 
 **Global install**
+
 ```bash
 npm install -g win-claude-code
 win-claude
@@ -77,8 +84,9 @@ npx win-claude-code
 ### 📦 What Unix Commands Are Available?
 
 Once Git for Windows is installed, you'll have access to:
+
 - `grep` - Search text patterns
-- `find` - Locate files and directories  
+- `find` - Locate files and directories
 - `awk` - Text processing and data extraction
 - `sed` - Stream editor for filtering and transforming text
 - `curl` - Transfer data from servers
@@ -92,6 +100,7 @@ Once Git for Windows is installed, you'll have access to:
 ### 🔍 Auto-Detection Process
 
 win-claude-code automatically searches for Git Bash in these locations:
+
 - `C:\Program Files\Git\usr\bin`
 - `C:\Program Files (x86)\Git\usr\bin`
 - `%ProgramFiles%\Git\usr\bin`
@@ -102,12 +111,14 @@ win-claude-code automatically searches for Git Bash in these locations:
 ## 🌟 Requirements
 
 ### 💻 Essential Requirements
-- **Node.js** 16+ 
+
+- **Node.js** 16+
 - **Windows** 10/11
 - **npm** (available in PATH)
 - **Claude Code** (must be installed globally)
 
 ### 🔧 Recommended for Full Experience
+
 - **Git for Windows** (for Unix commands like `grep`, `find`, `awk`, `sed`)
   - Download from [git-scm.com/download/win](https://git-scm.com/download/win)
   - Enables 90% of Linux command compatibility
@@ -116,18 +127,21 @@ win-claude-code automatically searches for Git Bash in these locations:
 ## 💡 Pro Tips
 
 ### 🎯 Essential Tips
+
 - **Global installation is required** - Claude Code must be installed with `-g` flag
 - Use your favorite terminal - PowerShell, CMD, Windows Terminal
 - If npm commands fail, restart your terminal after Node.js installation
 - Works with all Claude Code features and commands
 
 ### 🛠️ Unix Commands Tips
+
 - **Install Git for Windows first** for the best experience with Unix commands
 - **No configuration needed** - win-claude-code automatically detects and adds Git Bash tools
 - **Check installation**: Run `grep --version` after starting win-claude-code to verify Unix commands work
 - **Performance**: Git Bash tools are slightly slower than native Windows tools but much more compatible
 
 ### 🔧 Troubleshooting
+
 - **If Unix commands don't work**: Make sure Git for Windows is installed with default options
 - **If Git Bash detection fails**: Check if `C:\Program Files\Git\usr\bin` exists
 - **For advanced users**: You can manually add Git Bash to PATH before running win-claude-code
@@ -135,16 +149,19 @@ win-claude-code automatically searches for Git Bash in these locations:
 ## ⚠️ Known Issues
 
 ### 🐛 General Issues
+
 - Terminal interactions might feel slightly different in some edge cases
 - Report bugs with details and we'll fix them fast
 
 ### 🛠️ Unix Commands Related
+
 - **Performance**: Git Bash commands are ~10-20% slower than native Linux
 - **Compatibility**: Some advanced Unix command options might not work exactly like Linux
 - **Path separators**: Mixed Windows/Unix paths in some edge cases
 - **Case sensitivity**: Windows filesystem limitations may affect some file operations
 
 ### 💡 Workarounds
+
 - For performance-critical operations, consider using native Windows alternatives
 - Use forward slashes `/` in paths for better compatibility
 - Most common use cases (grep, find, awk, sed) work perfectly fine
@@ -158,12 +175,12 @@ win-claude-code automatically searches for Git Bash in these locations:
 "Claude Code package is not installed globally"
 → Run: npm install -g @anthropic-ai/claude-code --ignore-scripts
 
-# npm not found  
+# npm not found
 "npm command not found"
 → Add npm to your PATH or reinstall Node.js
 
 # CLI script missing
-"CLI script is not found"  
+"CLI script is not found"
 → Reinstall Claude Code with --ignore-scripts flag
 
 # Unix commands not working
@@ -178,9 +195,10 @@ win-claude-code automatically searches for Git Bash in these locations:
 ```
 
 Found other bugs? [Drop it here](https://github.com/somersby10ml/win-claude-code/issues) with:
+
 - Windows version
 - Node.js version
-- Terminal used  
+- Terminal used
 - Complete error message
 
 ## 📜 License
