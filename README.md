@@ -68,11 +68,13 @@ win-claude
 
 **Want to use `grep`, `find`, `awk`, `sed` and other Unix commands with Claude Code?**
 
-### 🎯 Install Git for Windows (Recommended)
+### 🎯 Install Git for Windows (Optional but Recommended)
 
 1. **Download Git for Windows** from [git-scm.com/download/win](https://git-scm.com/download/win)
 2. **Install with default options** (includes Git Bash with Unix tools)
-3. **Run win-claude-code** - Unix commands will be automatically available!
+3. **Run win-claude-code** - Unix commands will be automatically detected and available!
+
+> 💡 **Note**: Git Bash is optional, but highly recommended for the best experience. If you run win-claude-code from PowerShell, it will automatically detect and use Git Bash tools when available.
 
 ```bash
 # After installing Git for Windows
@@ -117,11 +119,12 @@ win-claude-code automatically searches for Git Bash in these locations:
 - **npm** (available in PATH)
 - **Claude Code** (must be installed globally)
 
-### 🔧 Recommended for Full Experience
+### 🔧 Optional but Recommended
 
-- **Git for Windows** (for Unix commands like `grep`, `find`, `awk`, `sed`)
+- **Git for Windows** (optional - for Unix commands like `grep`, `find`, `awk`, `sed`)
   - Download from [git-scm.com/download/win](https://git-scm.com/download/win)
   - Enables 90% of Linux command compatibility
+  - Automatically detected when running from PowerShell
   - Most Windows developers already have this installed!
 
 ## 💡 Pro Tips
