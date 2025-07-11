@@ -1,6 +1,6 @@
 {
   "name": "win-claude-code",
-  "version": "1.0.8-canary.1",
+  "version": "1.0.8-canary.2",
   "main": "runner.js",
   "type": "module",
   "bin": {
