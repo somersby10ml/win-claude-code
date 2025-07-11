@@ -43,6 +43,25 @@ const originalConsole = {
   }
 
   const hook = () => {
+
+    // F2 Key Hook (originally Shift + Tab, changed for Windows compatibility)
+    // plan mode or auto-accept mode
+    const originalStdin = process.stdin;
+    const fakeStdin = Object.create(originalStdin);
+    fakeStdin.read = function (...args) {
+      const result = originalStdin.read.apply(originalStdin, args);
+      if (result && result.toString().includes('\x1b[[B')) {
+        return Buffer.from('\x1b[Z');
+      }
+      return result;
+    };
+
+    Object.defineProperty(process, 'stdin', {
+      value: fakeStdin,
+      writable: false,
+      configurable: false
+    });
+
     const originalAccessSync = fs.accessSync;
     fs.accessSync = function (...args) {
       if (args.length >= 2 && typeof args[0] === 'string' && args[0].includes('/bin/bash') && args[1] === 1) {
