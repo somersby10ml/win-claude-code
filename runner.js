@@ -80,6 +80,14 @@ import os from 'os';
                       return driveLetter + ':' + restPath.replace(/\//g, '\\');
                     }
                   }
+                  // Handle existing Windows paths - ensure drive letter is uppercase
+                  else if (/^[a-zA-Z]:[\\\/]/.test(folder)) {
+                    const driveLetter = folder[0].toUpperCase();
+                    const restPath = folder.substring(1);
+
+                    // Ensure consistent backslash separators and uppercase drive
+                    return driveLetter + restPath.replace(/\//g, '\\');
+                  }
                 }
                 return folder;
               });
