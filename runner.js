@@ -5,13 +5,19 @@ import fs from 'fs';
 import { syncBuiltinESMExports, createRequire } from 'module';
 import os from 'os';
 
-const originalConsole = {
-  error: console.error.bind(console),
-  warn: console.warn.bind(console),
-  log: console.log.bind(console)
-};
-
 (async () => {
+
+  const originalMethods = {
+    error: console.error.bind(console),
+    warn: console.warn.bind(console),
+    log: console.log.bind(console)
+  };
+
+  const originalConsole = {
+    error: (...args) => originalMethods.error('[win-claude-code]', ...args),
+    warn: (...args) => originalMethods.warn('[win-claude-code]', ...args),
+    log: (...args) => originalMethods.log('[win-claude-code]', ...args)
+  };
 
   let gitBashPath = null;
   async function main() {
@@ -31,14 +37,14 @@ const originalConsole = {
 
     gitBashPath = findGitBashPath();
     if (!gitBashPath) {
-      originalConsole.warn('[win-claude-code] Git Bash not found - Unix commands (grep, find, awk, sed) will not be available');
-      originalConsole.warn('[win-claude-code] To enable Unix commands, install Git for Windows: https://git-scm.com/download/win');
-      originalConsole.warn('[win-claude-code] After installation, restart your terminal and run win-claude-code again');
+      originalConsole.warn('Git Bash not found - Unix commands (grep, find, awk, sed) will not be available');
+      originalConsole.warn('To enable Unix commands, install Git for Windows: https://git-scm.com/download/win');
+      originalConsole.warn('After installation, restart your terminal and run win-claude-code again');
     }
 
     hook();
     await import(`file://${cliPath}`).catch(err => {
-      originalConsole.error('[win-claude-code] Error importing CLI script:', err);
+      originalConsole.error('Error importing CLI script:', err);
     });
   }
 
@@ -139,7 +145,7 @@ const originalConsole = {
           return originalSpawn.call(this, command, args, options);
         }
         catch (error) {
-          originalConsole.error('[win-claude-code] spawn error:', error);
+          originalConsole.error('spawn error:', error);
           throw error;
         }
       };
@@ -159,7 +165,7 @@ const originalConsole = {
         }
 
       } catch (e) {
-        originalConsole.warn('[win-claude-code] Could not hook spawn function:', e.message);
+        originalConsole.warn('Could not hook spawn function:', e.message);
       }
     }
 
