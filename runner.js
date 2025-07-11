@@ -50,6 +50,87 @@ import os from 'os';
 
   const hook = () => {
 
+    // Hook execFile to intercept cursor extension commands
+    // Prevents actual IDE from launching and returns extension list from filesystem
+    try {
+      // TODO: what is `cursor --force --install-extension C:\Users\admin\AppData\Local\nvm\v22.11.0\node_modules\@anthropic-ai\claude-code\vendor\claude-code.vsix`?
+      // TODO: It looks like you're forcing the extension to install, but think about how you want to handle it in the future.
+      const require = createRequire(import.meta.url);
+      const childProcess = require('child_process');
+      const originalExecFile = childProcess.execFile;
+
+      // Custom execFile hook that intercepts IDE extension commands
+      const hookedExecFile = function (file, args, options, callback) {
+        // Handle parameter variations exactly like original execFile
+        let actualArgs = args;
+        let actualOptions = options;
+        let actualCallback = callback;
+
+        // execFile(file, callback)
+        if (typeof args === 'function') {
+          actualCallback = args;
+          actualArgs = undefined;
+          actualOptions = undefined;
+        }
+        // execFile(file, args, callback)
+        else if (typeof options === 'function') {
+          actualCallback = options;
+          actualOptions = undefined;
+        }
+
+        // Only intercept if we have valid args array and it contains --list-extensions
+        const isCursorExtensionListCommand = (
+          file === 'cursor' &&
+          Array.isArray(actualArgs) &&
+          actualArgs.includes('--list-extensions')
+        );
+
+        if (isCursorExtensionListCommand) {
+          // Check if --show-versions flag is present
+          const includeVersion = actualArgs.includes('--show-versions');
+
+          // Get extension list using our function for Cursor
+          const extensionList = getIdeExtensionList('.cursor', includeVersion);
+          const stdout = extensionList.join('\n');
+          const stderr = '';
+
+          // Call callback asynchronously to simulate real execFile behavior
+          if (typeof actualCallback === 'function') {
+            process.nextTick(() => {
+              actualCallback(null, stdout, stderr);
+            });
+          }
+
+          // Return a mock child process object
+          return {
+            pid: process.pid,
+            stdout: { on: () => { }, pipe: () => { } },
+            stderr: { on: () => { }, pipe: () => { } },
+            on: () => { },
+            kill: () => { }
+          };
+        }
+
+        // For non-extension commands, call original execFile with exact same parameters
+        // Preserve original parameter structure
+        if (typeof args === 'function') {
+          return originalExecFile.call(this, file, args);
+        } else if (typeof options === 'function') {
+          return originalExecFile.call(this, file, args, options);
+        } else {
+          return originalExecFile.call(this, file, args, options, callback);
+        }
+      };
+
+      // Replace the execFile method
+      childProcess.execFile = hookedExecFile;
+
+    } catch (error) {
+      originalConsole.error('[EXECFILE HOOK] Failed to hook execFile method:', error.message);
+    }
+
+
+
     // F2 Key Hook (originally Shift + Tab, changed for Windows compatibility)
     // plan mode or auto-accept mode
     const originalStdin = process.stdin;
@@ -253,6 +334,64 @@ import os from 'os';
       }
 
       throw new Error(`Failed to get npm global root: ${error.message}`);
+    }
+  }
+
+  /**
+   * Reads installed IDE extensions from filesystem instead of launching the IDE
+   * @param {string} ideDirectory - IDE directory name (default: '.cursor')
+   * @param {boolean} includeVersion - Whether to include version in format 'id@version' (default: false)
+   * @returns {string[]} Array of extension IDs or extension IDs with versions
+   * @throws Returns empty array on any error (file not found, parse error, etc.)
+   */
+  const getIdeExtensionList = (ideDirectory = '.cursor', includeVersion = false) => {
+    try {
+      // Construct %USERPROFILE%/{ideDirectory}/extensions/extensions.json path
+      const homeDir = os.homedir();
+      const extensionsJsonPath = path.join(homeDir, ideDirectory, 'extensions', 'extensions.json');
+
+      // Check if file exists
+      if (!fs.existsSync(extensionsJsonPath)) {
+        return [];
+      }
+
+      // Read file and parse JSON
+      const fileContent = fs.readFileSync(extensionsJsonPath, 'utf8');
+      const extensionsData = JSON.parse(fileContent);
+
+      // Check if it's an array
+      if (!Array.isArray(extensionsData)) {
+        return [];
+      }
+
+      // Extract extension list
+      const extensionList = [];
+
+      for (const extension of extensionsData) {
+        // Check identifier.id and version properties
+        if (extension &&
+          extension.identifier &&
+          extension.identifier.id &&
+          extension.version) {
+
+          const extensionId = extension.identifier.id;
+          const extensionVersion = extension.version;
+
+          if (includeVersion === true) {
+            // When includeVersion = true: return extension ID@version format
+            extensionList.push(`${extensionId}@${extensionVersion}`);
+          } else {
+            // When includeVersion = false: return extension ID only
+            extensionList.push(extensionId);
+          }
+        }
+      }
+
+      return extensionList;
+
+    } catch (error) {
+      // Return empty array if file reading or parsing error occurs
+      return [];
     }
   }
 
