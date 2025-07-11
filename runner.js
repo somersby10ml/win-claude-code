@@ -44,7 +44,7 @@ const originalConsole = {
 
   const hook = () => {
 
-    // Shift + Tab Hook
+    // F2 Key Hook (originally Shift + Tab, changed for Windows compatibility)
     // plan mode or auto-accept mode
     const originalStdin = process.stdin;
     const fakeStdin = Object.create(originalStdin);
