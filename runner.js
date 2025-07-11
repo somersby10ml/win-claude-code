@@ -50,6 +50,59 @@ import os from 'os';
 
   const hook = () => {
 
+    // Claude IDE Lock File Path Conversion Hook
+    // Converts POSIX paths to Windows paths for IDE compatibility 
+    // Transforms /mnt/c/path to C:\path format in workspaceFolders
+    try {
+      const originalReadFileSync = fs.readFileSync;
+      fs.readFileSync = function (path, options) {
+        const result = originalReadFileSync.apply(this, arguments);
+
+        const fileName = String(path).toString();
+        const isClaudeIdeLockFile = /\.claude[\\\/]ide[\\\/]\d+\.lock$/i.test(fileName);
+        if (isClaudeIdeLockFile) {
+          try {
+            const jsonContent = JSON.parse(result.toString());
+            if (jsonContent && Array.isArray(jsonContent.workspaceFolders)) {
+              jsonContent.workspaceFolders = jsonContent.workspaceFolders.map(folder => {
+                if (typeof folder === 'string') {
+                  if (folder.startsWith('/mnt/')) {
+                    // Remove /mnt/ prefix
+                    const withoutMnt = folder.substring(5);
+
+                    // Check if drive letter exists
+                    if (withoutMnt.length > 0) {
+                      // Convert drive letter to uppercase and add colon
+                      const driveLetter = withoutMnt[0].toUpperCase();
+                      const restPath = withoutMnt.substring(1);
+
+                      // Convert to Windows path format (C:\path)
+                      return driveLetter + ':' + restPath.replace(/\//g, '\\');
+                    }
+                  }
+                }
+                return folder;
+              });
+
+              const modifiedResult = JSON.stringify(jsonContent);
+              if (result instanceof Buffer) {
+                return Buffer.from(modifiedResult);
+              } else {
+                return modifiedResult;
+              }
+            }
+          } catch (error) {
+            // Silently continue with original result if JSON parsing fails
+          }
+        }
+
+        return result;
+      };
+    } catch (error) {
+    }
+
+
+
     // Hook execFile to intercept cursor extension commands
     // Prevents actual IDE from launching and returns extension list from filesystem
     try {
