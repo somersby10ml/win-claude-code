@@ -337,6 +337,13 @@ import os from 'os';
     }
   }
 
+  /**
+   * Reads installed IDE extensions from filesystem instead of launching the IDE
+   * @param {string} ideDirectory - IDE directory name (default: '.cursor')
+   * @param {boolean} includeVersion - Whether to include version in format 'id@version' (default: false)
+   * @returns {string[]} Array of extension IDs or extension IDs with versions
+   * @throws Returns empty array on any error (file not found, parse error, etc.)
+   */
   const getIdeExtensionList = (ideDirectory = '.cursor', includeVersion = false) => {
     try {
       // Construct %USERPROFILE%/{ideDirectory}/extensions/extensions.json path
