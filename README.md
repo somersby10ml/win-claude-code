@@ -25,6 +25,19 @@ npx win-claude-code@latest
 
 **That's it.** 🎉
 
+Optional: Set up a Powershell function to invoke this
+
+1. Open your Powershell profile:
+   ```bash
+   code $PROFILE
+   ```
+2. Add a function:
+   ```bash
+   function claude {npx win-claude-code@latest}
+   ```
+
+Now you can run claude code with just `claude`!
+
 ## ✨ What This Does
 
 - **Bypasses bash dependency checks** - No more terminal detection fails
